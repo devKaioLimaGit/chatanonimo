@@ -130,7 +130,7 @@ io.use(sharedSession(sessionMiddleware, {
 }));
 
 io.on("connection", async (socket) => {
-  const user = socket.handshake.session.user;
+  const user = (socket.handshake as any).session?.user;
 
   if (!user) {
     socket.disconnect();
