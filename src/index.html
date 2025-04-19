@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Anônimo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-container {
+      width: 100%;
+      height: 100vh;
+      background-color: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+    }
+
+    .header {
+      background: linear-gradient(to right, #1e3a8a, #3b82f6);
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .header p {
+      margin-top: 8px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .logout-button {
+      padding: 8px 16px;
+      background-color: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logout-button:hover {
+      background-color: #dc2626;
+    }
+
+    .status {
+      padding: 16px;
+      background-color: #f9fafb;
+      color: #4b5563;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .room-input {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 24px;
+    }
+
+    .room-input input,
+    .message-input input {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .room-input input:focus,
+    .message-input input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .room-input button,
+    .message-input button {
+      padding: 12px 16px;
+      background-color: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room-input button:hover,
+    .message-input button:hover {
+      background-color: #2563eb;
+    }
+
+    .messages {
+      height: 400px;
+      overflow-y: auto;
+      padding: 16px;
+      background-color: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      list-style: none;
+    }
+
+    .messages li {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #1f2937;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .messages li.system {
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .message-input {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 24px;
+    }
+
+    /* Estilizar a barra de rolagem */
+    .messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 10px;
+    }
+
+    /* Animação para mensagens */
+    @keyframes slideIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Estilização do socket ID */
+    .room-input div {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .room-input div input#socketIdInput {
+      flex: 1;
+      background-color: #f9fafb;
+      cursor: not-allowed;
+    }
+
+    .room-input div button {
+      padding: 12px 16px;
+      background-color: #10b981;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.3s;
+    }
+
+    .room-input div button:hover {
+      background-color: #059669;
+    }
+
+    /* Responsividade */
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .header p {
+        font-size: 12px;
+      }
+
+      .room-input,
+      .message-input {
+        padding: 16px;
+      }
+
+      .room-input input,
+      .message-input input {
+        font-size: 14px;
+      }
+
+      .room-input button,
+      .message-input button {
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+
+      .messages {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Cabeçalho -->
+    <div class="header">
+      <div>
+        <h1>Chat Anônimo</h1>
+        <p>Converse em tempo real com segurança e simplicidade</p>
+      </div>
+      <button class="logout-button" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </button>
+    </div>
+
+    <!-- Status -->
+    <div id="status" class="status">Nenhuma sala selecionada.</div>
+
+    <!-- Área de Entrada na Sala -->
+    <div class="room-input">
+      <input id="roomId" type="text" placeholder="Digite o ID da sala (ex.: sala123)">
+      <button onclick="joinRoom()">
+        <i class="fas fa-sign-in-alt"></i> Entrar na Sala
+      </button>
+    </div>
+
+    <!-- Área de Mensagens -->
+    <ul id="messages" class="messages"></ul>
+
+    <!-- Área de Envio de Mensagem -->
+    <div class="message-input">
+      <input id="messageInput" type="text" placeholder="Digite sua mensagem...">
+      <button onclick="sendMessage()">
+        <i class="fas fa-paper-plane"></i> Enviar
+      </button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script>
+    const socket = io();
+
+    let mySocketId = null;
+    let currentRoom = null;
+
+    socket.on("connect", () => {
+      console.log("Conectado ao servidor!");
+    });
+
+    socket.on("disconnect", () => {
+      document.getElementById("status").textContent = "Desconectado do servidor.";
+      currentRoom = null;
+      document.getElementById("messages").innerHTML = "";
+      const socketIdContainer = document.querySelector(".room-input div");
+      if (socketIdContainer) {
+        socketIdContainer.remove();
+      }
+    });
+
+    // Receber o socket.id do servidor
+    socket.on("sessionInfo", ({ socketId }) => {
+      mySocketId = socketId;
+      console.log("Meu socket ID:", mySocketId);
+      document.getElementById("status").textContent = `Seu ID de sessão: ${mySocketId}`;
+      showSocketId(mySocketId);
+    });
+
+    // Quando entra ou cria uma sala
+    socket.on("joinedRoom", ({ roomId, message, socketId }) => {
+      currentRoom = roomId; // Definir a sala atual
+      document.getElementById("status").textContent = `${message} (Seu ID: ${socketId})`;
+      addMessage(message, true);
+    });
+
+    socket.on("roomFull", ({ message }) => {
+      Toastify({
+        text: message,
+        duration: 3000,
+        backgroundColor: "#ef4444",
+        position: "center",
+      }).showToast();
+      document.getElementById("status").textContent = "Não foi possível entrar na sala.";
+    });
+
+    socket.on("userJoined", ({ user, message }) => {
+      addMessage(message, true);
+    });
+
+    socket.on("userLeft", ({ user, message }) => {
+      addMessage(message, true);
+    });
+
+    socket.on("roomStatus", ({ userCount }) => {
+      document.getElementById("status").textContent = `Usuários na sala: ${userCount} (Seu ID: ${mySocketId})`;
+    });
+
+    socket.on("receiveMessage", ({ user, message }) => {
+      addMessage(`${user}: ${message}`);
+    });
+
+    socket.on("error", ({ message }) => {
+      Toastify({
+        text: message,
+        duration: 3000,
+        backgroundColor: "#ef4444",
+        position: "center",
+      }).showToast();
+    });
+
+    function joinRoom() {
+      const roomId = document.getElementById("roomId").value.trim();
+      if (roomId) {
+        socket.emit("joinRoom", roomId);
+      } else {
+        Toastify({
+          text: "Digite um ID de sala!",
+          duration: 3000,
+          backgroundColor: "#ef4444",
+          position: "center",
+        }).showToast();
+      }
+    }
+
+    function sendMessage() {
+      const message = document.getElementById("messageInput").value.trim();
+      if (!currentRoom) {
+        Toastify({
+          text: "Entre em uma sala primeiro!",
+          duration: 3000,
+          backgroundColor: "#ef4444",
+          position: "center",
+        }).showToast();
+        return;
+      }
+      if (message) {
+        socket.emit("sendMessage", { roomId: currentRoom, message });
+        document.getElementById("messageInput").value = "";
+      }
+    }
+
+    function addMessage(message, isSystem = false) {
+      const messages = document.getElementById("messages");
+      const li = document.createElement("li");
+      li.textContent = message;
+      if (isSystem) {
+        li.classList.add("system");
+      }
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showSocketId(socketId) {
+      const roomInput = document.querySelector(".room-input");
+      const socketIdContainer = document.createElement("div");
+      socketIdContainer.innerHTML = `
+        <input id="socketIdInput" type="text" value="${socketId}" readonly>
+        <button onclick="copySocketId()">
+          <i class="fas fa-copy"></i> Copiar ID
+        </button>
+      `;
+      roomInput.appendChild(socketIdContainer);
+    }
+
+    function copySocketId() {
+      const socketIdInput = document.getElementById("socketIdInput");
+      socketIdInput.select();
+      document.execCommand("copy");
+      Toastify({
+        text: "ID de sessão copiado!",
+        duration: 3000,
+        backgroundColor: "#10b981",
+        position: "center",
+      }).showToast();
+    }
+
+    function logout() {
+      fetch("/logout", {
+        method: "POST",
+        credentials: "include", // Include cookies in the request
+      })
+        .then((response) => {
+          if (response.ok) {
+            socket.disconnect();
+            currentRoom = null;
+            document.getElementById("status").textContent = "Desconectado do servidor.";
+            document.getElementById("messages").innerHTML = "";
+            document.getElementById("roomId").value = "";
+            const socketIdContainer = document.querySelector(".room-input div");
+            if (socketIdContainer) {
+              socketIdContainer.remove();
+            }
+            Toastify({
+              text: "Sessão encerrada com sucesso!",
+              duration: 3000,
+              backgroundColor: "#10b981",
+              position: "center",
+            }).showToast();
+            window.location.href = "/"
+          } else {
+            throw new Error("Erro ao encerrar a sessão");
+          }
+        })
+        .catch((error) => {
+          console.error("Erro no logout:", error);
+          Toastify({
+            text: "Erro ao encerrar a sessão. Tente novamente.",
+            duration: 3000,
+            backgroundColor: "#ef4444",
+            position: "center",
+          }).showToast();
+        });
+    }
+
+    // Event listener for Enter key to send message
+    document.getElementById("messageInput").addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
